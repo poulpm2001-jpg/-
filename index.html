@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>نظام امتحانات الكنائس</title>
+  <style>
+    body{font-family:Arial;background:#0f172a;color:white;margin:0;padding:20px}
+    .box{max-width:900px;margin:auto;background:#1e293b;padding:20px;border-radius:15px}
+    button{padding:10px;border:none;border-radius:10px;cursor:pointer;margin:5px}
+    input,textarea,select{width:100%;padding:10px;margin:5px 0;border-radius:10px}
+    .card{background:#334155;padding:10px;margin:10px 0;border-radius:10px}
+  </style>
+</head>
+<body>
+
+<div class="box">
+  <h1>⛪ نظام امتحانات الكنائس</h1>
+
+  <input id="studentName" placeholder="اسم الطالب">
+  <button onclick="loadExam()">دخول الامتحان</button>
+
+  <div id="exam"></div>
+  <button onclick="submitExam()">تسليم</button>
+  <h3 id="result"></h3>
+
+  <hr>
+
+  <h2>لوحة الأدمن</h2>
+  <input id="adminPass" placeholder="كود الأدمن">
+  <button onclick="loginAdmin()">دخول</button>
+
+  <div id="admin" style="display:none">
+    <textarea id="q" placeholder="السؤال"></textarea>
+    <input id="a1" placeholder="إجابة 1">
+    <input id="a2" placeholder="إجابة 2">
+    <input id="a3" placeholder="إجابة 3">
+    <input id="a4" placeholder="إجابة 4">
+    <input id="correct" placeholder="رقم الإجابة الصحيحة 0-3">
+    <button onclick="addQ()">إضافة سؤال</button>
+
+    <h3>النتائج</h3>
+    <div id="results"></div>
+  </div>
+</div>
+
+<script>
+const firebaseURL = "YOUR_FIREBASE_URL";
+
+let examData = [];
+let answers = [];
+
+function loginAdmin(){
+  if(document.getElementById('adminPass').value==='123987'){
+    document.getElementById('admin').style.display='block'
+    loadResults()
+  } else alert('خطأ')
+}
+
+function addQ(){
+  examData.push({
+    q:document.getElementById('q').value,
+    a:[a1.value,a2.value,a3.value,a4.value],
+    c:correct.value
+  })
+  alert('تمت الإضافة')
+}
+
+function loadExam(){
+  let e=document.getElementById('exam')
+  e.innerHTML=''
+  examData.forEach((x,i)=>{
+    e.innerHTML+=`<div class='card'>
+    <p>${x.q}</p>
+    ${x.a.map((a,j)=>`<label><input type='radio' name='q${i}' value='${j}'>${a}</label><br>`).join('')}
+    </div>`
+  })
+}
+
+function submitExam(){
+  let score=0
+  examData.forEach((x,i)=>{
+    let ans=document.querySelector(`input[name=q${i}]:checked`)
+    if(ans && ans.value==x.c) score++
+  })
+
+  document.getElementById('result').innerText="نتيجتك: "+score
+
+  let name=document.getElementById('studentName').value
+  let data={name,score}
+  let old=JSON.parse(localStorage.getItem('res')||'[]')
+  old.push(data)
+  localStorage.setItem('res',JSON.stringify(old))
+
+  loadResults()
+}
+
+function loadResults(){
+  let r=document.getElementById('results')
+  let data=JSON.parse(localStorage.getItem('res')||'[]')
+  r.innerHTML=data.map(x=>`<div class='card'>${x.name} - ${x.score}</div>`).join('')
+}
+</script>
+
+</body>
+</html>
